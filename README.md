@@ -65,7 +65,7 @@ Hybrid-Multi-Level-Queue-CPU-Scheduling-Simulator/
 1. Download or clone the repository:
 
 ```bash
-git clone https://github.com/your-username/Hybrid-Multi-Level-Queue-CPU-Scheduling-Simulator.git
+git clone https://github.com/Shafiullah-Raihan/Hybrid-Multi-Level-Queue-CPU-Scheduling-Simulator.git
 ```
 
 2. Open the project folder.
@@ -105,17 +105,9 @@ This project is designed for:
 - Academic Presentations
 - Learning Process Scheduling Concepts
 
----
 
-## 📸 Preview
 
-Add screenshots here:
 
-```md
-![Simulator Screenshot](screenshot.png)
-```
-
----
 
 ## 🔥 Future Improvements
 
@@ -148,12 +140,11 @@ This project is licensed under the MIT License.
 
 ## 👨‍💻 Author
 
-Developed by **Your Name**
+Developed by **Shafiullah Raihan**
 
-GitHub: https://github.com/your-username
+GitHub: https://github.com/Shafiullah-Raihan
 
----
 
-## ⭐ Support
 
-If you like this project, give it a ⭐ on GitHub.
+
+
