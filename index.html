@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hybrid Multi-Level Queue CPU Scheduling Simulator</title>
+  
+  <style>
+    /* ============================================
+       RESET & BASE STYLES
+       ============================================ */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #0f172a;
+      color: #e5e7eb;
+      line-height: 1.5;
+    }
+
+    /* ============================================
+       LAYOUT
+       ============================================ */
+    header {
+      padding: 16px 24px;
+      background: #020617;
+      border-bottom: 1px solid #1f2937;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 24px auto 40px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    /* ============================================
+       CARDS & SECTIONS
+       ============================================ */
+    .card {
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      padding: 16px 18px 18px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.7);
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.1rem;
+    }
+
+    h3 {
+      font-size: 0.9rem;
+      margin: 0 0 4px;
+    }
+
+    .subtext {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 12px;
+    }
+
+    /* ============================================
+       FORMS & INPUTS
+       ============================================ */
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.85rem;
+    }
+
+    input:focus,
+    select:focus {
+      outline: 2px solid #6366f1;
+      outline-offset: 1px;
+      border-color: transparent;
+    }
+
+    /* ============================================
+       TABLES
+       ============================================ */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    th,
+    td {
+      padding: 6px 8px;
+      text-align: left;
+    }
+
+    th {
+      font-weight: 500;
+      color: #9ca3af;
+      border-bottom: 1px solid #1f2937;
+    }
+
+    .table-wrapper {
+      max-height: 220px;
+      overflow: auto;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+      margin-top: 6px;
+    }
+
+    /* ============================================
+       BUTTONS
+       ============================================ */
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 7px 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: filter 0.2s, background 0.2s;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-add {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+    }
+
+    .btn-add:hover:not(:disabled) {
+      background: #020617;
+    }
+
+    .btn-run {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #022c22;
+      font-weight: 600;
+      padding-inline: 18px;
+    }
+
+    .btn-run:hover:not(:disabled) {
+      filter: brightness(1.05);
+    }
+
+    .btn-remove {
+      background: transparent;
+      color: #f97373;
+      padding: 0;
+      border-radius: 999px;
+    }
+
+    .btn-remove span {
+      font-size: 0.9rem;
+    }
+
+    .row-actions {
+      text-align: right;
+      width: 40px;
+    }
+
+    /* ============================================
+       UTILITY CLASSES
+       ============================================ */
+    .flex {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .flex-between {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .mt-2 {
+      margin-top: 8px;
+    }
+
+    .mt-3 {
+      margin-top: 12px;
+    }
+
+    .mt-4 {
+      margin-top: 16px;
+    }
+
+    /* ============================================
+       BADGES & PILLS
+       ============================================ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 0.7rem;
+      border: 1px solid #374151;
+    }
+
+    .badge-rr {
+      background: rgba(56, 189, 248, 0.1);
+      border-color: rgba(56, 189, 248, 0.5);
+      color: #7dd3fc;
+    }
+
+    .badge-fcfs {
+      background: rgba(248, 250, 252, 0.03);
+      border-color: rgba(148, 163, 184, 0.7);
+      color: #cbd5f5;
+    }
+
+    .badge-aging {
+      background: rgba(52, 211, 153, 0.06);
+      border-color: rgba(52, 211, 153, 0.5);
+      color: #6ee7b7;
+    }
+
+    .pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+    }
+
+    .pill-interactive {
+      background: rgba(56, 189, 248, 0.15);
+      color: #7dd3fc;
+    }
+
+    .pill-batch {
+      background: rgba(167, 139, 250, 0.15);
+      color: #c4b5fd;
+    }
+
+    /* ============================================
+       LEGEND
+       ============================================ */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.75rem;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 10px;
+      border-radius: 999px;
+    }
+
+    .swatch-rr {
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    }
+
+    .swatch-fcfs {
+      background: linear-gradient(135deg, #a855f7, #7c3aed);
+    }
+
+    .swatch-idle {
+      background: repeating-linear-gradient(
+        45deg,
+        #111827,
+        #111827 4px,
+        #020617 4px,
+        #020617 8px
+      );
+    }
+
+    /* ============================================
+       GANTT CHART
+       ============================================ */
+    .gantt {
+      position: relative;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      background: radial-gradient(circle at top left, #1e293b, #020617);
+      border: 1px solid #1f2937;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .gantt-row {
+      display: flex;
+      align-items: stretch;
+      min-width: max-content;
+    }
+
+    .gantt-cell {
+      min-width: 30px;
+      max-width: 30px;
+      font-size: 0.7rem;
+      text-align: center;
+      padding: 4px 2px 3px;
+      color: #020617;
+      position: relative;
+      border-radius: 6px;
+      margin-right: 2px;
+    }
+
+    .gantt-cell.rr {
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    }
+
+    .gantt-cell.fcfs {
+      background: linear-gradient(135deg, #a855f7, #7c3aed);
+    }
+
+    .gantt-cell.idle {
+      background: #0b1120;
+      color: #4b5563;
+      border: 1px dashed #1f2937;
+    }
+
+    .gantt-cell small {
+      display: block;
+      font-size: 0.6rem;
+      color: rgba(15, 23, 42, 0.85);
+    }
+
+    .gantt-time-axis {
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      min-width: max-content;
+    }
+
+    .gantt-time-axis div {
+      min-width: 30px;
+      max-width: 30px;
+      font-size: 0.65rem;
+      text-align: center;
+      color: #6b7280;
+    }
+
+    /* ============================================
+       METRICS
+       ============================================ */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    @media (min-width: 600px) {
+      .metrics {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    .metric-card {
+      background: #020617;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      padding: 8px 10px;
+      font-size: 0.8rem;
+    }
+
+    .metric-label {
+      color: #9ca3af;
+      font-size: 0.75rem;
+    }
+
+    .metric-value {
+      font-size: 1rem;
+      margin-top: 2px;
+    }
+
+    /* ============================================
+       MESSAGES & FEEDBACK
+       ============================================ */
+    .error {
+      margin-top: 6px;
+      font-size: 0.78rem;
+      color: #fca5a5;
+    }
+
+    .hint {
+      font-size: 0.7rem;
+      color: #6b7280;
+    }
+
+    /* ============================================
+       COMPARISON TABLE
+       ============================================ */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+      margin-top: 12px;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid #1f2937;
+    }
+
+    .comparison-table th {
+      background: #020617;
+      color: #9ca3af;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .comparison-table tr:hover {
+      background: rgba(56, 189, 248, 0.05);
+    }
+
+    .comparison-table td:first-child {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .best-metric {
+      background: rgba(34, 197, 94, 0.15);
+      color: #6ee7b7;
+      font-weight: 600;
+    }
+
+    .comparison-wrapper {
+      max-height: 400px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="flex-between">
+      <div>
+        <h1>Hybrid Multi-Level Queue CPU Scheduling Simulator</h1>
+        <div class="subtext">
+          Pure JavaScript implementation (RR + FCFS + Preemption + Aging) - runs entirely in your browser.
+        </div>
+      </div>
+      <div class="legend">
+        <span class="legend-item">
+          <span class="swatch swatch-rr"></span> Q1 – Interactive (Round Robin)
+        </span>
+        <span class="legend-item">
+          <span class="swatch swatch-fcfs"></span> Q2 – Batch (FCFS)
+        </span>
+        <span class="legend-item">
+          <span class="swatch swatch-idle"></span> CPU Idle
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Process Configuration Section -->
+    <section class="card">
+      <h2>Process Configuration</h2>
+      <div class="subtext">
+        Define your workload, then run the hybrid multi-level queue scheduler.
+      </div>
+
+      <div class="flex-between mt-2">
+        <div class="flex" style="flex-wrap: wrap; gap: 10px">
+          <span class="badge badge-rr">Q1 – Interactive (Type 0, Round Robin)</span>
+          <span class="badge badge-fcfs">Q2 – Batch (Type 1, FCFS)</span>
+          <span class="badge badge-aging">Aging: promote long-waiting Q2 jobs</span>
+        </div>
+      </div>
+
+      <div class="mt-3 flex" style="gap: 12px; flex-wrap: wrap">
+        <div style="min-width: 120px">
+          <label for="rr-quantum">RR Time Quantum (Q1)</label>
+          <input id="rr-quantum" type="number" min="1" value="2" />
+        </div>
+        <div style="min-width: 140px">
+          <label for="aging-threshold">Aging Threshold (Q2 time units)</label>
+          <input id="aging-threshold" type="number" min="1" value="10" />
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 40px">ID</th>
+              <th>Arrival</th>
+              <th>Burst</th>
+              <th>Type</th>
+              <th class="row-actions"></th>
+            </tr>
+          </thead>
+        </table>
+        <div class="table-wrapper">
+          <table id="process-table">
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="flex-between mt-3">
+        <div class="flex" style="flex-wrap: wrap; gap: 8px">
+          <button id="add-row" class="btn-add">
+            <span>＋</span> Add Process
+          </button>
+          <button id="clear-all" class="btn-add" title="Clear all processes">
+            <span>🗑</span> Clear All
+          </button>
+          <select id="preset-select" class="btn-add" style="padding: 7px 10px; cursor: pointer; background: #111827; color: #e5e7eb; border: 1px solid #374151;">
+            <option value="">Load Preset...</option>
+            <option value="simple">Simple (3 processes)</option>
+            <option value="mixed">Mixed Types (4 processes)</option>
+            <option value="starvation">Starvation Test (5 processes)</option>
+            <option value="complex">Complex (6 processes)</option>
+          </select>
+        </div>
+        <div class="flex" style="gap: 6px">
+          <span class="hint">Type 0 = Interactive, Type 1 = Batch</span>
+          <button id="run-sim" class="btn-run">Run Simulation</button>
+        </div>
+      </div>
+
+      <div id="form-error" class="error" style="display: none"></div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="card">
+      <h2>Execution Timeline & Metrics</h2>
+      <div class="subtext">
+        Visual Gantt chart per time unit, plus per-process and average performance metrics.
+      </div>
+
+      <div id="gantt-container" class="gantt" style="display: none">
+        <div id="gantt-row" class="gantt-row"></div>
+        <div id="gantt-time" class="gantt-time-axis"></div>
+      </div>
+
+      <div id="metrics" class="metrics" style="display: none">
+        <div class="metric-card">
+          <div class="metric-label">Average Waiting Time</div>
+          <div id="avg-wt" class="metric-value">–</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Average Turnaround Time</div>
+          <div id="avg-tat" class="metric-value">–</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">CPU Utilization</div>
+          <div id="cpu-util" class="metric-value">–</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Throughput</div>
+          <div id="throughput" class="metric-value">–</div>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <h3>Per-Process Metrics</h3>
+        <div class="table-wrapper" id="metrics-table-wrapper" style="display: none">
+          <table id="metrics-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Arrival</th>
+                <th>Burst</th>
+                <th>Waiting</th>
+                <th>Turnaround</th>
+                <th>Completion</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Algorithm Comparison Section -->
+    <section class="card" style="grid-column: 1 / -1;">
+      <h2>Algorithm Comparison</h2>
+      <div class="subtext">
+        Compare how popular OS scheduling algorithms handle the same input. Metrics show which algorithm performs best for each criterion.
+      </div>
+
+      <div id="comparison-container" style="display: none;">
+        <div class="comparison-wrapper">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Algorithm</th>
+                <th>Avg Waiting Time</th>
+                <th>Avg Turnaround Time</th>
+                <th>CPU Utilization</th>
+                <th>Throughput</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody id="comparison-table-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- JavaScript Files - Separate algorithms -->
+  <script src="js/scheduler.js"></script>
+  <script src="js/fcfs.js"></script>
+  <script src="js/sjf.js"></script>
+  <script src="js/srtf.js"></script>
+  <script src="js/priority.js"></script>
+  <script src="js/roundrobin.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>
